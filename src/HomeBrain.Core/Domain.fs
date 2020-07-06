@@ -3,14 +3,10 @@ open System
 
 type Name20 = Name20 of string
 
-type User = {
-  Id: Guid
-  Name: Name20
-}
-
 type File =
   | Photo
   | PDF
+  | Essay
 
 type Submission = {
   Id: Guid
@@ -18,9 +14,14 @@ type Submission = {
   Date: DateTime
 }
 
-// TODO: Not useful for pattern matching
-type Student = Student of User
-type Host = Host of User
+type Person = {
+  Id: Guid
+  Name: Name20
+}
+
+type User =
+  | Student of Person
+  | Host of Person
 
 type String40 = String40 of string
 
@@ -33,17 +34,14 @@ type RoomStatus =
 type Room = {
   Id: Guid
   Title: String40
-  Hosts: Host array
-  Students: Student array
+  Hosts: User array
+  Students: User array
   Status: RoomStatus
 }
 
 type String300 = String300 of string
 
-// FIXME
-type ResponseFn = unit -> bool
-type ExamRequest = Student * Host array * String300 * ResponseFn
-type ExamResponse = Host * Student * String300 * bool
+type Message = String300
 
 let tryName s =
   if s |> String.length > 20 then None
