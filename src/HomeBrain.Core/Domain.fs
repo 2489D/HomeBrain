@@ -25,18 +25,12 @@ type User =
 
 type String40 = String40 of string
 
-type RoomStatus =
-  | Waiting
-  | On
-  | End
-
 // Shares server time
 type Room = {
   Id: Guid
   Title: String40
   Hosts: User array
   Students: User array
-  Status: RoomStatus
 }
 
 type String300 = String300 of string
