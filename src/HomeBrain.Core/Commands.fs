@@ -3,7 +3,6 @@ module Commands
 open Domain
 
 type Command =
-  | CreateRoom of Room
   | StartExam of Room
   | EndExam of Room
   | EnterRoom of User * Room
