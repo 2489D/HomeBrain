@@ -1,4 +1,4 @@
-module Domain
+module HomeBrain.Domain
 open System
 
 type Name20 = Name20 of string

@@ -9,6 +9,5 @@
     <Compile Include="States.fs" />
     <Compile Include="Errors.fs" />
     <Compile Include="CommandHandlers.fs" />
-    <Compile Include="Library.fs" />
   </ItemGroup>
 </Project>

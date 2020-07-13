@@ -1,23 +1,27 @@
 module CommandHandlers
 
-open Domain
-open Commands
-open Errors
+open HomeBrain.Domain
+open HomeBrain.Commands
+open HomeBrain.Errors
+open HomeBrain.States
 
-let createRoom room state =
-  Ok room
+let startExam = function
+  | RoomIsWaiting room -> Ok (RoomOnExam room)
+  | RoomOnExam _ -> Error ExamAlreadyStarted
+  | RoomExamFisished _ -> Error ExamAlreadyEnded
+  | RoomIsClosed _ -> Error NotValidRoom
 
-let startExam room state =
-  match room.Status with
-  | Waiting -> Ok { room with Status = On }
-  | On -> Error ExamAlreadyStarted
-  | End -> Error ExamAlreadyEnded
+let endExam = function
+  | RoomIsWaiting _ -> Error ExamNotStarted
+  | RoomOnExam room -> Ok (RoomExamFisished room)
+  | RoomExamFisished _ -> Error ExamAlreadyEnded
+  | RoomIsClosed _ -> Error NotValidRoom
 
-let endExam room state =
-  match room.Status with
-  | Waiting -> Error ExamNotStarted
-  | On -> Ok { room with Status = End }
-  | End -> Error ExamAlreadyEnded
+let closeRoom = function
+  | RoomIsWaiting room -> Ok (RoomIsClosed room)
+  | RoomOnExam _ -> Error CannotCloseRoomDuringExam
+  | RoomExamFisished room -> Ok (RoomIsClosed room)
+  | RoomIsClosed _ -> Error NotValidRoom
 
 let enterRoom user room state =
   match user with
@@ -30,8 +34,11 @@ let exitRoom user room state =
   | Host h -> Ok { room with Hosts = Array.filter ((<>) (Host h)) room.Students}
 
 let execute state = function
-  | CreateRoom room -> createRoom room state
-  | StartExam room -> startExam room state
-  | EndExam room -> endExam room state
-  | EnterRoom (user, room) -> enterRoom user room state
-  | ExitRoom (user, room) -> exitRoom user room state
+  | StartExam _ ->
+    (startExam state) :: [Ok state]
+  | EndExam _ -> endExam state
+
+let evolve state command =
+  match execute state command with
+  | Ok s -> 
+  | Error err -> Error err

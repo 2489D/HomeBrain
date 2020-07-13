@@ -1,4 +1,4 @@
-module Events
+module HomeBrain.Events
 open Domain
 
 type Event =

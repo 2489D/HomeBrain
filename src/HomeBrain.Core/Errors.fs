@@ -1,4 +1,4 @@
-module Errors
+module HomeBrain.Errors
 
 type Error =
   | StringTooLong of string
