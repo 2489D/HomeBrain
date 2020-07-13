@@ -8,4 +8,4 @@ type Command =
   | EnterRoom of User * Room
   | ExitRoom of User * Room
   | SubmitPaper of User * Submission
-  | SendRequest of User * User array * string
+  | SendRequest of User * User array * Message 
