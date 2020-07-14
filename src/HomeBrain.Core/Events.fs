@@ -1,11 +1,19 @@
 module HomeBrain.Events
-open Domain
+open HomeBrain.Domain
 
-type Event =
-  | ExamStarted of Room
-  | ExamEnded of Room
-  | UserEntered of User * Room
-  | UserExited of User * Room
+type StateChangedEvent =
+  | ExamStarted
+  | ExamEnded
+  | UserEntered of User
+  | UserExited of User
   | PaperSubmitted of User * Submission
-  | MessageSent of User * User * Message 
-  | RoomClosed of Room
+  | RoomClosed
+  | NoOp
+
+type RequestEvent =
+  | RequestSent of User * User array * Request
+  | NoOp
+
+type RoomEvent =
+  | StateChangedEvent of StateChangedEvent
+  | RequestEvent of RequestEvent

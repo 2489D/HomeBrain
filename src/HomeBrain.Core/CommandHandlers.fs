@@ -1,44 +1,74 @@
-module CommandHandlers
-
+module HomeBrain.CommandHandlers
 open HomeBrain.Domain
+open HomeBrain.Room
 open HomeBrain.Commands
+open HomeBrain.Events
 open HomeBrain.Errors
-open HomeBrain.States
+open HomeBrain.EventStore
 
-let startExam = function
-  | RoomIsWaiting room -> Ok (RoomOnExam room)
-  | RoomOnExam _ -> Error ExamAlreadyStarted
-  | RoomExamFisished _ -> Error ExamAlreadyEnded
-  | RoomIsClosed _ -> Error NotValidRoom
+// RoomState -> StateChangedEvent -> Result<RoomState, Error>
+// Expected RoomState for result (need to be changed)
+let applyEvent oldState event =
+  match event with
+  | ExamStarted ->
+    Room.startExam oldState
+  | ExamEnded ->
+    Room.endExam oldState
+  | UserEntered user ->
+    Room.enterRoom user oldState
+  | UserExited user ->
+    Room.exitRoom user oldState
+  | PaperSubmitted (user, submission) ->
+    //
+  | RoomClosed ->
+    Room.closeRoom oldState
+  | NoOp ->
+    OK oldState
 
-let endExam = function
-  | RoomIsWaiting _ -> Error ExamNotStarted
-  | RoomOnExam room -> Ok (RoomExamFisished room)
-  | RoomExamFisished _ -> Error ExamAlreadyEnded
-  | RoomIsClosed _ -> Error NotValidRoom
+// RoomCommand -> RoomState -> RoomEvent list
+let eventsFromCommand command stateBeforeCommand =
+  let stateChangedEvent =
+    match command.action with
+    | StartExam -> ExamStarted
+    | EndExam -> ExamEnded
+    | EnterUser user -> UserEntered user
+    | ExitUser user -> UserExited
+    | SubmitPaper a -> PaperSubmitted a
+    | SendRequest _ -> NoOp
+    | CloseRoom -> RoomClosed
+  
+  let requestEvent =
+    match command.action with
+    | SendRequest a -> RequestSent a
+    | _ -> NoOp
 
-let closeRoom = function
-  | RoomIsWaiting room -> Ok (RoomIsClosed room)
-  | RoomOnExam _ -> Error CannotCloseRoomDuringExam
-  | RoomExamFisished room -> Ok (RoomIsClosed room)
-  | RoomIsClosed _ -> Error NotValidRoom
+  let stateAfterCommand =
+    applyEvent stateBeforeCommand stateChangedEvent
 
-let enterRoom user room state =
-  match user with
-  | Student s -> Ok { room with Students = Array.append [| Student s |] room.Students}
-  | Host h -> Ok { room with Hosts = Array.append [| Host h |] room.Hosts }
+  match stateAfterCommand with
+  | OK _ ->
+    [ stateChangedEvent; requestEvent ]
+  | Error _ ->
+    //
 
-let exitRoom user room state =
-  match user with
-  | Student s -> Ok { room with Students = Array.filter ((<>) (Student s)) room.Students}
-  | Host h -> Ok { room with Hosts = Array.filter ((<>) (Host h)) room.Students}
+type GetStateChangedEventsForId =
+  RoomId -> StateChangedEvent list
 
-let execute state = function
-  | StartExam _ ->
-    (startExam state) :: [Ok state]
-  | EndExam _ -> endExam state
+type SaveRoomEvent =
+  RoomId -> RoomEvent -> unit
 
-let evolve state command =
-  match execute state command with
-  | Ok s -> 
-  | Error err -> Error err
+let commandHandler
+  (getEvents: GetStateChangedEventsForId)
+  (saveEvent: SaveRoomEvent)
+  (command: RoomCommand) =
+
+  let eventHistory =
+    getEvents command.roomId
+  
+  let stateBeforeCommand =
+    eventHistory
+      |> List.fold applyEvent Room.initialRoomState
+  
+  let events = eventsFromCommand command stateBeforeCommand
+
+  events |> List.iter (saveEvent command.roomId)

@@ -1,11 +1,20 @@
 module HomeBrain.Commands
+open System
+open HomeBrain.Domain
+open HomeBrain.Room
 
-open Domain
+type RoomId = Guid
 
-type Command =
-  | StartExam of Room
-  | EndExam of Room
-  | EnterRoom of User * Room
-  | ExitRoom of User * Room
+type RoomCommandAction =
+  | StartExam
+  | EndExam
+  | EnterUser of User
+  | ExitUser of User
   | SubmitPaper of User * Submission
-  | SendRequest of User * User array * Message 
+  | SendRequest of User * User array * Request
+  | CloseRoom
+
+type RoomCommand = {
+  roomId: RoomId
+  action: RoomCommandAction
+}

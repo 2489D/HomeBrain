@@ -25,17 +25,10 @@ type User =
 
 type String40 = String40 of string
 
-// Shares server time
-type Room = {
-  Id: Guid
-  Title: String40
-  Hosts: User array
-  Students: User array
-}
-
 type String300 = String300 of string
 
-type Message = String300
+type Request =
+  | Message of String300
 
 let tryName s =
   if s |> String.length > 20 then None
