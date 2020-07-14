@@ -11,9 +11,9 @@ type State =
 
 let apply state event =
   match state, event with
-  | RoomIsWaiting _, ExamStarted room -> RoomOnExam room
-  | RoomIsWaiting _, RoomClosed room -> RoomIsClosed room
-  | RoomIsWaiting _, UserEntered (user, room) -> RoomIsWaiting room
-  | RoomIsWaiting _, UserExited (user, room) -> RoomIsWaiting room
-  | RoomOnExam _, ExamEnded room -> RoomExamFisished room
-  | RoomExamFisished _, RoomClosed room -> RoomIsClosed room
+  | RoomIsWaiting _, ExamStarted -> RoomOnExam
+  | RoomIsWaiting _, RoomClosed -> RoomIsClosed
+  | RoomIsWaiting _, UserEntered user -> RoomIsWaiting
+  | RoomIsWaiting _, UserExited user -> RoomIsWaiting
+  | RoomOnExam _, ExamEnded -> RoomExamFisished
+  | RoomExamFisished _, RoomClosed -> RoomIsClosed

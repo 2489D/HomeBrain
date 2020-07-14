@@ -1,11 +1,12 @@
 module HomeBrain.Events
+
 open Domain
 
 type Event =
-  | ExamStarted of Room
-  | ExamEnded of Room
-  | UserEntered of User * Room
-  | UserExited of User * Room
+  | ExamStarted
+  | ExamEnded
+  | UserEntered of User
+  | UserExited of User
   | PaperSubmitted of User * Submission
   | MessageSent of User * User * Message 
-  | RoomClosed of Room
+  | RoomClosed
