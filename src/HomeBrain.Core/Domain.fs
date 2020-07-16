@@ -8,12 +8,6 @@ type File =
   | PDF
   | Essay
 
-type Submission = {
-  Id: Guid
-  File: File list
-  Date: DateTime
-}
-
 type Person = {
   Id: Guid
   Name: Name20
@@ -22,6 +16,13 @@ type Person = {
 type User =
   | Student of Person
   | Host of Person
+
+type Submission = {
+  Id: Guid
+  Student: User 
+  Files: File list
+  Date: DateTime
+}
 
 type String40 = String40 of string
 

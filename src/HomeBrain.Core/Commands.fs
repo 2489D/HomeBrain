@@ -12,6 +12,6 @@ type Command =
   | EnterRoom of Guid * User
   | ExitRoom of Guid * User
   | SubmitPaper of Guid * User * Submission
-  | SendMessage of Guid * User * User array * Message 
+  | SendMessage of Guid * User * User list * Message 
   | EndExam of Guid 
   | CloseRoom of Guid
