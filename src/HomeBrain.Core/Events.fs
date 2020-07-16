@@ -12,6 +12,6 @@ type Event =
   | UserEntered of Guid * User
   | UserExited of Guid * User
   | PaperSubmitted of Guid * User * Submission
-  | MessageSent of User * User array * Message 
+  | MessageSent of Guid * User * User list * Message 
   | ExamEnded of Guid
   | RoomClosed of Guid
