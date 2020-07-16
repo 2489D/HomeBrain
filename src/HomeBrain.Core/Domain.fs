@@ -29,8 +29,8 @@ type String40 = String40 of string
 type Room = {
   Id: Guid
   Title: String40
-  Hosts: User array
-  Students: User array
+  Hosts: User list
+  Students: User list
 }
 
 type String300 = String300 of string
