@@ -2,6 +2,8 @@ module HomeBrain.Commands
 
 open System
 open Domain
+open Domain.User
+open Domain.Message
 
 /// Commands that exposed to APIs
 /// A command should contain all contexts
@@ -11,7 +13,7 @@ type Command =
   | StartExam of Room
   | EnterRoom of Guid * User
   | ExitRoom of Guid * User
-  | SubmitPaper of Guid * User * Submission
-  | SendMessage of Guid * User * User list * Message 
+  | SubmitPaper of Guid * Student * Submission
+  | SendMessage of Guid * Message 
   | EndExam of Guid 
   | CloseRoom of Guid
