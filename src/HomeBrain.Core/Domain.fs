@@ -10,7 +10,7 @@ type File =
 
 type Submission = {
   Id: Guid
-  File: File array
+  File: File list
   Date: DateTime
 }
 
