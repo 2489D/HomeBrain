@@ -10,11 +10,13 @@ open Domain.Message
 /// An event data should contain all contexts
 /// as parameters of a constructor
 type Event =
-  | ExamStarted of Guid
-  | UserEntered of Guid * User
-  | UserExited of Guid * User
+  | ExamStarted of RoomGuid
+  | UserEntered of RoomGuid * User
+  | UserExited of RoomGuid * User
   // Submission will be prepended to the submission list of the student data
-  | PaperSubmitted of Guid * Student * Submission
-  | MessageSent of Guid * Message 
-  | ExamEnded of Guid
-  | RoomClosed of Guid
+  | PaperSubmitted of RoomGuid * Student * Submission
+  | MessageSent of RoomGuid * Message 
+  | ExamEnded of RoomGuid
+  | RoomClosed of RoomGuid
+  | RoomTitleChanged of RoomGuid * RoomTitle40
+  | PaperOpened of RoomGuid * Student

@@ -1,75 +1,73 @@
 module HomeBrain.States
 
+open System
+
 open Domain
+open Domain.Message
+open Domain.User
 open Events
 
 type State =
   | RoomIsWaiting of Room * Message list
-  | RoomOnExam of Room * Message list * Submission list
-  | RoomExamFisished of Room * Message list * Submission list
+  | RoomOnExam of Room * Message list
+  | RoomExamFinished of Room * Message list
   | RoomIsClosed
 
 /// apply an event to state so that produces
 /// a state transition
-// TODO: not yet to be fully implemented
+/// TODO: not yet to be fully implemented
 let apply state event =
   match state, event with
   // Events during RoomIsWaiting
-  | RoomIsWaiting (room, msgs), ExamStarted guid -> RoomOnExam (room, msgs, [])
-  | RoomIsWaiting _ , RoomClosed guid -> RoomIsClosed
-  | RoomIsWaiting (room, msgs), UserEntered (guid, user) ->
+  | RoomIsWaiting (room, msgs), ExamStarted _ -> RoomOnExam (room, msgs)
+  | RoomIsWaiting (room, msgs), UserEntered (_, user) ->
     match user with
     | Student s ->
-      RoomIsWaiting ({room with Students = (Student s) :: room.Students}, msgs)
+      RoomIsWaiting ({room with Students = room.Students |> Map.add s.Id s}, msgs)
     | Host h ->
-      RoomIsWaiting ({room with Hosts = (Host h) :: room.Hosts}, msgs)
-  | RoomIsWaiting (room, msgs), UserExited (guid, user) ->
+      RoomIsWaiting ({room with Hosts = room.Hosts |> Map.add h.Id h}, msgs)
+  | RoomIsWaiting (room, msgs), UserExited (_, user) ->
     match user with
     | Student s ->
-      RoomIsWaiting ({room with Students = room.Students |> List.filter ((<>) (Student s))}, msgs)
+      RoomIsWaiting ({room with Students = room.Students |> Map.remove s.Id}, msgs)
     | Host h ->
-      RoomIsWaiting ({room with Hosts = room.Hosts |> List.filter ((<>) (Host h))}, msgs)
-  | RoomIsWaiting (room, msgs), MessageSent (guid, sender, receivers, msg) ->
+      RoomIsWaiting ({room with Hosts = room.Hosts |> Map.remove h.Id}, msgs)
+  | RoomIsWaiting (room, msgs), MessageSent (_, msg) ->
     RoomIsWaiting (room, msg :: msgs)
+  | RoomIsWaiting _ , RoomClosed _ -> RoomIsClosed
   
   // Events during RoomOnExam
-  | RoomOnExam (room, msgs, subms), UserExited (guid, user) ->
+  | RoomOnExam (room, msgs), UserEntered (roomGuid, onlyHost) ->
+    match onlyHost with
+    | Host h ->
+      RoomOnExam ({room with Hosts = room.Hosts |> Map.add h.Id h}, msgs)
+    | _ -> state
+  | RoomOnExam (room, msgs), UserExited (_, user) ->
     match user with
     | Student s ->
-      RoomOnExam (
-        {room with Students = room.Students |> List.filter ((<>) (Student s))},
-        msgs, subms
-      )
+      RoomOnExam ({room with Students = room.Students |> Map.remove s.Id}, msgs)
     | Host h ->
-      RoomOnExam (
-        {room with Hosts = room.Hosts |> List.filter ((<>) (Host h))},
-        msgs, subms
-      )
-  | RoomOnExam (room, msgs, subms), PaperSubmitted (guid, user, subm) ->
-    RoomOnExam (room, msgs, subm :: subms)
-  | RoomOnExam (room, msgs, subms), MessageSent (guid, sender, receivers, msg) ->
-    RoomOnExam (room, msg :: msgs, subms)
-  | RoomOnExam (room, msgs, subms), ExamEnded guid ->
-    RoomExamFisished (room, msgs, subms)
+      RoomOnExam ({room with Hosts = room.Hosts |> Map.remove h.Id}, msgs)
+  | RoomOnExam (room, msgs), PaperSubmitted (_, student, subm) ->
+    RoomOnExam (
+      {room with Students = room.Students |> Map.add student.Id {student with Submissions = subm :: student.Submissions}}, msgs)
+  | RoomOnExam (room, msgs), MessageSent (_, msg) ->
+    RoomOnExam (room, msg :: msgs)
+  | RoomOnExam (room, msgs), ExamEnded _ ->
+    RoomExamFinished (room, msgs)
   
   // Events during RoomExamFinished
-  | RoomExamFisished (room, msgs, subms), UserExited (guid, user) ->
+  | RoomExamFinished (room, msgs), UserExited (_, user) ->
     match user with
     | Student s ->
-      RoomExamFisished (
-        {room with Students = room.Students |> List.filter ((<>) (Student s))},
-        msgs, subms
-      )
+      RoomExamFinished ({room with Students = room.Students |> Map.remove s.Id}, msgs)
     | Host h ->
-      RoomExamFisished (
-        {room with Hosts = room.Hosts |> List.filter ((<>) (Host h))},
-        msgs, subms
-      )
+      RoomExamFinished ({room with Hosts = room.Hosts |> Map.remove h.Id}, msgs)
   
-  | RoomExamFisished (room, msgs, subms), MessageSent (guid, sender, receivers, msg) ->
-    RoomExamFisished (room, msg :: msgs, subms)
+  | RoomExamFinished (room, msgs), MessageSent (_, msg) ->
+    RoomExamFinished (room, msg :: msgs)
   
-  | RoomExamFisished _, RoomClosed _ ->
+  | RoomExamFinished _, RoomClosed _ ->
     RoomIsClosed
   
   | _ -> state

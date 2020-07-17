@@ -1,85 +1,78 @@
-module CommandHandlers
+module HomeBrain.CommandHandlers
 
 open System
 
-open HomeBrain.Domain
-open HomeBrain.Events
-open HomeBrain.Commands
-open HomeBrain.Errors
-open HomeBrain.States
+open Domain
+open Domain.User
+// open Domain.Message
+open Events
+open Commands
+open Errors
+open States
 
 let handleStartExam = function
-  | RoomIsWaiting (room, msgs) -> RoomOnExam (room, msgs, []) |> Ok
+  | RoomIsWaiting (room, _) -> [ExamStarted (room.Id)] |> Ok
   | _ -> Error ExamAlreadyStarted
 
 let handleEnterRoom user = function
-  | RoomIsWaiting (room, msgs) ->
+  | RoomIsWaiting (room, _) -> [UserEntered (room.Id, user)] |> Ok
+  | RoomOnExam (room, _) ->
     match user with
-    | Student s -> RoomIsWaiting ( {room with Students = user :: room.Students}, msgs) |> Ok
-    | Host h -> RoomIsWaiting ( {room with Hosts = user :: room.Hosts}, msgs) |> Ok
-  | _ -> ExamAlreadyStarted |> Error
+    | Host _ -> [UserEntered (room.Id, user)] |> Ok
+    | Student _ -> Error StudentCannotEnterAfterExamStarted
+  | _ -> Error ExamAlreadyStarted
 
 let handleExitRoom user = function
-  | RoomIsWaiting (room, msgs) ->
-    match user with
-    | Student s -> RoomIsWaiting ( {room with Students = room.Students |> List.filter ((<>) user)}, msgs) |> Ok
-    | Host h -> RoomIsWaiting ( {room with Hosts = room.Hosts |> List.filter ((<>) user)}, msgs) |> Ok
-  | RoomOnExam (room, msgs, subms) ->
+  | RoomIsWaiting (room, _) -> [UserExited (room.Id, user)] |> Ok
+  | RoomOnExam (room, _) ->
     match user with
     | Student s ->
-      if subms |> List.exists (fun subm -> subm.Student = user)
-      then RoomOnExam ({room with Students = room.Students |> List.filter ((<>) user)}, msgs, subms) |> Ok
-      else Error DidntSubmitPaper
-    | Host h -> Error HostCannotExitDuringExam
-  // All works have been submitted automatically when an exam finished
-  | RoomExamFisished (room, msgs, subms) ->
+      if s.Submissions |> List.isEmpty
+      then Error DidntSubmitPaper
+      else [UserExited (room.Id, user)] |> Ok
+    | Host _ -> Error HostCannotExitDuringExam
+  | RoomExamFinished (room, _) ->
     match user with
-    | Student s ->
-      RoomExamFisished ({room with Students = room.Students |> List.filter((<>) user)}, msgs, subms) |> Ok
-    | Host h ->
-      if room.Students |> List.isEmpty
-      then RoomExamFisished ({room with Hosts = room.Hosts |> List.filter ((<>) user)}, msgs, subms) |> Ok
-      else Error HostShouldExitAfterAllStudentsExited
+    | Student _ -> [UserExited (room.Id, user)] |> Ok
+    | Host _ ->
+      if room.Students |> (Map.isEmpty >> not) && room.Hosts |> Map.count = 1
+      then Error AtLeastOneHostShouldRemainWhileStudentInRoom
+      else [UserExited (room.Id, user)] |> Ok
   | RoomIsClosed -> Error NotValidRoom
 
-let handleSubmitPaper subm = function
-  | RoomOnExam (room, msgs, subms) ->
-    RoomOnExam (room, msgs, subm :: subms) |> Ok
+let handleSubmitPaper student subm = function
+  | RoomOnExam (room, _) ->
+    [PaperSubmitted (room.Id, student, subm)] |> Ok
   | _ -> Error CannotSubmitPaperNotWhileExamRunning
 
-// FIXME
-let handleSendMessage sender receivers msg = function
-  | RoomIsWaiting (room, msgs) -> RoomIsWaiting (room, msg :: msgs) |> Ok
-  | RoomOnExam (room, msgs, subms) -> RoomOnExam (room, msg :: msgs, subms) |> Ok
-  | RoomExamFisished (room, msgs, subms) -> RoomExamFisished (room, msg :: msgs, subms) |> Ok
+let handleSendMessage msg = function
+  | RoomIsWaiting (room, _) -> [MessageSent (room.Id, msg)] |> Ok
+  | RoomOnExam (room, _) -> [MessageSent (room.Id, msg)] |> Ok
+  | RoomExamFinished (room, _) -> [MessageSent (room.Id, msg)] |> Ok
   | RoomIsClosed -> Error CannotSendMessageAfterRoomClosed
 
 let handleEndExam = function
-  // force all students to submit their works
-  | RoomOnExam (room, msgs, subms) ->
-    // FIXME: How to track files?
-    let newSubms = room.Students |> List.map (fun student ->
-      {Id = Guid.NewGuid(); Student = student; Files = []; Date = DateTime.UtcNow})
-    RoomExamFisished (room, msgs, newSubms @ subms) |> Ok
+  | RoomOnExam (room, _) -> [ExamEnded room.Id] |> Ok
   | _ -> Error CannotEndExam
 
 let handleCloseRoom = function
-  | RoomIsWaiting _ -> RoomIsClosed |> Ok
-  | RoomExamFisished _ -> RoomIsClosed |> Ok
+  | RoomIsWaiting (room, _) -> [RoomClosed room.Id] |> Ok
+  | RoomExamFinished (room, _) -> [RoomClosed room.Id] |> Ok
   | RoomOnExam _ -> Error CannotCloseRoomDuringExam
   | RoomIsClosed -> Error NotValidRoom
     
-let execute state command =
-  match command with
-  | StartExam room -> handleStartExam state
-  | EnterRoom (guid, user) -> handleEnterRoom user state
-  | ExitRoom (guid, user) -> handleExitRoom user state
-  | SubmitPaper (guid, user, subm) -> handleSubmitPaper subm state
-  | SendMessage (guid, sender, receivers, msg) -> handleSendMessage sender receivers msg state
-  | EndExam guid -> handleEndExam state
-  | CloseRoom guid -> handleCloseRoom state
+let execute state = function
+  | StartExam _ -> handleStartExam state
+  | EnterRoom (_, user) -> handleEnterRoom user state
+  | ExitRoom (_, user) -> handleExitRoom user state
+  | SubmitPaper (_, student, subm) -> handleSubmitPaper student subm state
+  | SendMessage (_, msg) -> handleSendMessage msg state
+  | EndExam _ -> handleEndExam state
+  | CloseRoom _ -> handleCloseRoom state
 
 let evolve state command =
-  let events = execute state command
-  let newState = events |> List.fold apply state
-  (newState, events)
+  match execute state command with
+  | Ok events ->
+    let newState = List.fold apply state events
+    (newState, events) |> Ok
+  | Error err -> Error err

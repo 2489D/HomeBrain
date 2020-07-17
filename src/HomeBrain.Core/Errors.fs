@@ -1,10 +1,8 @@
 module HomeBrain.Errors
 
 type Error =
-  | StringTooLong of string
   | DidntSubmitPaper
   | HostCannotExitDuringExam
-  | HostShouldExitAfterAllStudentsExited
   | CannotSubmitPaperNotWhileExamRunning // after exam ends
   | CannotOpenPaper // before exam starts 
   | CannotCloseRoomDuringExam
@@ -14,7 +12,22 @@ type Error =
   | CannotEndExam
   | CannotSendMessageAfterRoomClosed
   | NotValidRoom
+  | StudentCannotEnterAfterExamStarted
+  | AtLeastOneHostShouldRemainWhileStudentInRoom
 
-let toString = function
-  | StringTooLong s -> sprintf "Name is too long: %s" s
-  
+module Error =
+  let toString = function
+    | DidntSubmitPaper -> ""
+    | HostCannotExitDuringExam -> ""
+    | CannotSubmitPaperNotWhileExamRunning -> ""
+    | CannotOpenPaper -> ""
+    | CannotCloseRoomDuringExam -> ""
+    | ExamAlreadyStarted -> ""
+    | ExamAlreadyEnded -> ""
+    | ExamNotStarted -> ""
+    | CannotEndExam -> ""
+    | CannotSendMessageAfterRoomClosed -> ""
+    | NotValidRoom -> ""
+    | StudentCannotEnterAfterExamStarted -> ""
+    | AtLeastOneHostShouldRemainWhileStudentInRoom -> ""
+

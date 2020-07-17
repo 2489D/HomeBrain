@@ -10,10 +10,10 @@ open Domain.Message
 /// as a contructor parameters
 /// Please refer to Events.fs
 type Command =
-  | StartExam of Room
-  | EnterRoom of Guid * User
-  | ExitRoom of Guid * User
-  | SubmitPaper of Guid * Student * Submission
-  | SendMessage of Guid * Message 
-  | EndExam of Guid 
-  | CloseRoom of Guid
+  | StartExam of RoomGuid
+  | EnterRoom of RoomGuid * User
+  | ExitRoom of RoomGuid * User
+  | SubmitPaper of RoomGuid * Student * Submission
+  | SendMessage of RoomGuid * Message 
+  | EndExam of RoomGuid 
+  | CloseRoom of RoomGuid
