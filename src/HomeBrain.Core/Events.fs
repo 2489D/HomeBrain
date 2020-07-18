@@ -18,5 +18,8 @@ type Event =
   | MessageSent of RoomGuid * Message 
   | ExamEnded of RoomGuid
   | RoomClosed of RoomGuid
+  // TODO
   | RoomTitleChanged of RoomGuid * RoomTitle40
-  | UserNameChange of RoomGuid * User * Name20
+  | UserNameChangeed of RoomGuid * User * Name20
+  | StudentIdChanged of RoomGuid * Student * StudentId
+  | PaperAdded of RoomGuid * Paper

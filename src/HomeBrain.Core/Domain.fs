@@ -20,12 +20,12 @@ type SubmissionData =
 [<NoEquality; NoComparison>]
 type Submission = {
   Data: SubmissionData list
-  Date: DateTimeOffset
+  TimeStamp: DateTimeOffset
 }
 
 module User =
   type StudentGuid = Guid
-  type StudentId = IdString of string
+  type StudentId = IdString of string // FIXME
 
   [<NoEquality; NoComparison>]
   type StudentData = {
