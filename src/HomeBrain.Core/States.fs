@@ -34,10 +34,22 @@ let apply state event =
       RoomIsWaiting ({room with Hosts = room.Hosts |> Map.remove h.Id}, msgs)
   | RoomIsWaiting (room, msgs), MessageSent (_, msg) ->
     RoomIsWaiting (room, msg :: msgs)
-  | RoomIsWaiting _ , RoomClosed _ -> RoomIsClosed
-  
+  | RoomIsWaiting _, RoomClosed _ -> RoomIsClosed
+  | RoomIsWaiting (room, msgs), RoomTitleChanged (_, title) ->
+    RoomIsWaiting ({room with Title = title}, msgs)
+  | RoomIsWaiting (room, msgs), UserNameChangeed (_, user, name) ->
+    match user with
+    | Student s ->
+      RoomIsWaiting ({room with Students = room.Students |> Map.add s.Id {s with Name = name}}, msgs)
+    | Host h ->
+      RoomIsWaiting ({room with Hosts = room.Hosts |> Map.add h.Id {h with Name = name}}, msgs)
+  | RoomIsWaiting (room, msgs), StudentIdChanged (_, student, stdId) ->
+    RoomIsWaiting ({room with Students = room.Students |> Map.add student.Id {student with StdId = stdId}}, msgs)
+  | RoomIsWaiting (room, msgs), PaperAdded (_, paper) ->
+    RoomIsWaiting ({room with Paper = paper}, msgs)
+
   // Events during RoomOnExam
-  | RoomOnExam (room, msgs), UserEntered (roomGuid, onlyHost) ->
+  | RoomOnExam (room, msgs), UserEntered (_, onlyHost) ->
     match onlyHost with
     | Host h ->
       RoomOnExam ({room with Hosts = room.Hosts |> Map.add h.Id h}, msgs)
@@ -51,10 +63,9 @@ let apply state event =
   | RoomOnExam (room, msgs), PaperSubmitted (_, student, subm) ->
     RoomOnExam (
       {room with Students = room.Students |> Map.add student.Id {student with Submissions = subm :: student.Submissions}}, msgs)
-  | RoomOnExam (room, msgs), MessageSent (_, msg) ->
-    RoomOnExam (room, msg :: msgs)
-  | RoomOnExam (room, msgs), ExamEnded _ ->
-    RoomExamFinished (room, msgs)
+  | RoomOnExam (room, msgs), MessageSent (_, msg) -> RoomOnExam (room, msg :: msgs)
+  | RoomOnExam (room, msgs), ExamEnded _ -> RoomExamFinished (room, msgs)
+  // FIXME: Other events?
   
   // Events during RoomExamFinished
   | RoomExamFinished (room, msgs), UserExited (_, user) ->
@@ -63,10 +74,8 @@ let apply state event =
       RoomExamFinished ({room with Students = room.Students |> Map.remove s.Id}, msgs)
     | Host h ->
       RoomExamFinished ({room with Hosts = room.Hosts |> Map.remove h.Id}, msgs)
-  
   | RoomExamFinished (room, msgs), MessageSent (_, msg) ->
     RoomExamFinished (room, msg :: msgs)
-  
   | RoomExamFinished _, RoomClosed _ ->
     RoomIsClosed
   
