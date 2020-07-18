@@ -1,11 +1,14 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
-
   <ItemGroup>
+    <Compile Include="ReadModels.fs" />
     <Compile Include="Library.fs" />
+    <Compile Include="Projections.fs" />
+    <Compile Include="Queries.fs" />
   </ItemGroup>
-
+  <ItemGroup>
+    <ProjectReference Include="..\HomeBrain.Core\HomeBrain.Core.fsproj" />
+  </ItemGroup>
 </Project>
