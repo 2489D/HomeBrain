@@ -19,4 +19,4 @@ type Event =
   | ExamEnded of RoomGuid
   | RoomClosed of RoomGuid
   | RoomTitleChanged of RoomGuid * RoomTitle40
-  | PaperOpened of RoomGuid * Student
+  | UserNameChange of RoomGuid * User * Name20
