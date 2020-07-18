@@ -20,23 +20,19 @@ let handleEnterRoom user = function
     match user with
     | Host _ -> [UserEntered (room.Id, user)] |> Ok
     | Student _ -> Error StudentCannotEnterAfterExamStarted
-  | _ -> Error ExamAlreadyStarted
+  | _ -> Error CannotEnterAfterExamEnded
 
 let handleExitRoom user = function
-  | RoomIsWaiting (room, _) -> [UserExited (room.Id, user)] |> Ok
+  | RoomIsWaiting (room, _) | RoomExamFinished (room, _) -> [UserExited (room.Id, user)] |> Ok
   | RoomOnExam (room, _) ->
     match user with
     | Student s ->
       if s.Submissions |> List.isEmpty
-      then Error DidntSubmitPaper
+      then Error StudentCannotExitBeforeSubmit
       else [UserExited (room.Id, user)] |> Ok
-    | Host _ -> Error HostCannotExitDuringExam
-  | RoomExamFinished (room, _) ->
-    match user with
-    | Student _ -> [UserExited (room.Id, user)] |> Ok
     | Host _ ->
-      if room.Students |> (Map.isEmpty >> not) && room.Hosts |> Map.count = 1
-      then Error AtLeastOneHostShouldRemainWhileStudentInRoom
+      if room.Hosts |> Map.count = 1
+      then Error AtLeastOneHostShouldRemain
       else [UserExited (room.Id, user)] |> Ok
   | RoomIsClosed -> Error NotValidRoom
 
@@ -60,7 +56,23 @@ let handleCloseRoom = function
   | RoomExamFinished (room, _) -> [RoomClosed room.Id] |> Ok
   | RoomOnExam _ -> Error CannotCloseRoomDuringExam
   | RoomIsClosed -> Error NotValidRoom
-    
+
+let handleChangeRoomTitle title = function
+  | RoomIsWaiting (room, _) -> [RoomTitleChanged (room.Id, title)] |> Ok
+  | _ -> Error CannotChangeRoomTitleAfterExamStarted
+
+let handleChangeUserName user name = function
+  | RoomIsWaiting (room, _) -> [UserNameChanged (room.Id, user, name)] |> Ok
+  | _ -> Error CannotChangeRoomTitleAfterExamStarted
+
+let handleChangeStudentId student stdId = function
+  | RoomIsWaiting (room, _) -> [StudentIdChanged (room.Id, student, stdId)] |> Ok
+  | _ -> Error CannotChangeStudentIdAfterExamStarted
+
+let handleAddPaper paper = function
+  | RoomIsWaiting (room, _) -> [PaperAdded (room.Id, paper)] |> Ok
+  | _ -> Error CannotAddPaperAfterExamStarted
+
 let execute state = function
   | StartExam _ -> handleStartExam state
   | EnterRoom (_, user) -> handleEnterRoom user state
@@ -69,6 +81,10 @@ let execute state = function
   | SendMessage (_, msg) -> handleSendMessage msg state
   | EndExam _ -> handleEndExam state
   | CloseRoom _ -> handleCloseRoom state
+  | ChangeRoomTitle (_, title) -> handleChangeRoomTitle title state
+  | ChangeUserName (_, user, name) -> handleChangeUserName user name state
+  | ChangeStudentId (_, student, stdId) -> handleChangeStudentId student stdId state
+  | AddPaper (_, paper) -> handleAddPaper paper state
 
 let evolve state command =
   match execute state command with

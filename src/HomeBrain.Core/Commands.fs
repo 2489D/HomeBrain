@@ -17,3 +17,7 @@ type Command =
   | SendMessage of RoomGuid * Message 
   | EndExam of RoomGuid 
   | CloseRoom of RoomGuid
+  | ChangeRoomTitle of RoomGuid * RoomTitle40
+  | ChangeUserName of RoomGuid * User * Name20
+  | ChangeStudentId of RoomGuid * Student * StudentId
+  | AddPaper of RoomGuid * Paper

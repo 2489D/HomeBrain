@@ -1,33 +1,36 @@
 module HomeBrain.Errors
 
 type Error =
-  | DidntSubmitPaper
-  | HostCannotExitDuringExam
-  | CannotSubmitPaperNotWhileExamRunning // after exam ends
-  | CannotOpenPaper // before exam starts 
-  | CannotCloseRoomDuringExam
   | ExamAlreadyStarted
-  | ExamAlreadyEnded
-  | ExamNotStarted
-  | CannotEndExam
-  | CannotSendMessageAfterRoomClosed
-  | NotValidRoom
   | StudentCannotEnterAfterExamStarted
-  | AtLeastOneHostShouldRemainWhileStudentInRoom
+  | CannotEnterAfterExamEnded
+  | StudentCannotExitBeforeSubmit // FIXME: Submits? Submited?
+  | HostCannotExitDuringExam
+  | AtLeastOneHostShouldRemain
+  | NotValidRoom
+  | CannotSubmitPaperNotWhileExamRunning
+  | CannotSendMessageAfterRoomClosed
+  | CannotEndExam
+  | CannotCloseRoomDuringExam
+  | CannotChangeRoomTitleAfterExamStarted
+  | CannotChangeUserNameAfterExamStarted
+  | CannotChangeStudentIdAfterExamStarted
+  | CannotAddPaperAfterExamStarted
 
 module Error =
   let toString = function
-    | DidntSubmitPaper -> "Did not submit paper. Please submit first."
-    | HostCannotExitDuringExam -> "A host cannot leave the room during an exam."
-    | CannotSubmitPaperNotWhileExamRunning -> "Paper cannot be submitted during an exam."
-    | CannotOpenPaper -> "Cannot open paper now"
-    | CannotCloseRoomDuringExam -> "Cannot close this room since the exam is running."
-    | ExamAlreadyStarted -> "The exam elready started."
-    | ExamAlreadyEnded -> "The exam elready ended."
-    | ExamNotStarted -> "The exam has not been started yet."
-    | CannotEndExam -> "Cannot end an exam."
-    | CannotSendMessageAfterRoomClosed -> "Cannot send message since the room is already closed."
+    | ExamAlreadyStarted -> "Exam already started."
+    | StudentCannotEnterAfterExamStarted -> "Student cannot enter after exam started." // FIXME: start? starts?
+    | CannotEnterAfterExamEnded -> "Cannot enter room after exam ended."
+    | StudentCannotExitBeforeSubmit -> "Student cannot exit before one submits." // FIXME: Fxxking English
+    | HostCannotExitDuringExam -> "Host Cannot exit during exam."
+    | AtLeastOneHostShouldRemain -> "At least one host should remain."
     | NotValidRoom -> "The room is not valid. Probably the room is closed already."
-    | StudentCannotEnterAfterExamStarted -> "The exam is now operating. A student cannot enter."
-    | AtLeastOneHostShouldRemainWhileStudentInRoom -> "There is a student is a room. A host cannot leave."
-
+    | CannotSubmitPaperNotWhileExamRunning -> "Cannot submit paper not while during exam." // FIXME: Fxxking English
+    | CannotSendMessageAfterRoomClosed -> "Cannot send message after room closed."
+    | CannotEndExam -> "Cannot end exam."
+    | CannotCloseRoomDuringExam -> "Cannot close the room while during exam."
+    | CannotChangeRoomTitleAfterExamStarted -> "Cannot change the room title after exam started."
+    | CannotChangeUserNameAfterExamStarted -> "Cannot change a user's name after exam started."
+    | CannotChangeStudentIdAfterExamStarted -> "Cannot change a student's id after exam started."
+    | CannotAddPaperAfterExamStarted -> "Cannot add paper after exam started."

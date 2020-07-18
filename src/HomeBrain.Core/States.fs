@@ -65,7 +65,6 @@ let apply state event =
       {room with Students = room.Students |> Map.add student.Id {student with Submissions = subm :: student.Submissions}}, msgs)
   | RoomOnExam (room, msgs), MessageSent (_, msg) -> RoomOnExam (room, msg :: msgs)
   | RoomOnExam (room, msgs), ExamEnded _ -> RoomExamFinished (room, msgs)
-  // FIXME: Other events?
   
   // Events during RoomExamFinished
   | RoomExamFinished (room, msgs), UserExited (_, user) ->
