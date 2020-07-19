@@ -19,7 +19,8 @@ type State =
 let apply state event =
   match state, event with
   // Events during RoomIsWaiting
-  | RoomIsWaiting (room, msgs), ExamStarted _ -> RoomOnExam (room, msgs)
+  | RoomIsWaiting (room, msgs), ExamStarted _ ->
+    RoomOnExam (room, msgs)
   | RoomIsWaiting (room, msgs), UserEntered (_, user) ->
     match user with
     | Student s ->
@@ -34,10 +35,11 @@ let apply state event =
       RoomIsWaiting ({room with Hosts = room.Hosts |> Map.remove h.Id}, msgs)
   | RoomIsWaiting (room, msgs), MessageSent (_, msg) ->
     RoomIsWaiting (room, msg :: msgs)
-  | RoomIsWaiting _, RoomClosed _ -> RoomIsClosed
+  | RoomIsWaiting _, RoomClosed _ ->
+    RoomIsClosed
   | RoomIsWaiting (room, msgs), RoomTitleChanged (_, title) ->
     RoomIsWaiting ({room with Title = title}, msgs)
-  | RoomIsWaiting (room, msgs), UserNameChangeed (_, user, name) ->
+  | RoomIsWaiting (room, msgs), UserNameChanged (_, user, name) ->
     match user with
     | Student s ->
       RoomIsWaiting ({room with Students = room.Students |> Map.add s.Id {s with Name = name}}, msgs)
@@ -61,10 +63,12 @@ let apply state event =
     | Host h ->
       RoomOnExam ({room with Hosts = room.Hosts |> Map.remove h.Id}, msgs)
   | RoomOnExam (room, msgs), PaperSubmitted (_, student, subm) ->
-    RoomOnExam (
-      {room with Students = room.Students |> Map.add student.Id {student with Submissions = subm :: student.Submissions}}, msgs)
-  | RoomOnExam (room, msgs), MessageSent (_, msg) -> RoomOnExam (room, msg :: msgs)
-  | RoomOnExam (room, msgs), ExamEnded _ -> RoomExamFinished (room, msgs)
+    let newStudent = {student with Submissions = subm :: student.Submissions}
+    RoomOnExam ({room with Students = room.Students |> Map.add student.Id newStudent}, msgs)
+  | RoomOnExam (room, msgs), MessageSent (_, msg) ->
+    RoomOnExam (room, msg :: msgs)
+  | RoomOnExam (room, msgs), ExamEnded _ ->
+    RoomExamFinished (room, msgs)
   
   // Events during RoomExamFinished
   | RoomExamFinished (room, msgs), UserExited (_, user) ->

@@ -11,11 +11,13 @@ open Errors
 open States
 
 let handleStartExam = function
-  | RoomIsWaiting (room, _) -> [ExamStarted (room.Id)] |> Ok
+  | RoomIsWaiting (room, _) ->
+    [ExamStarted (room.Id)] |> Ok
   | _ -> Error ExamAlreadyStarted
 
 let handleEnterRoom user = function
-  | RoomIsWaiting (room, _) -> [UserEntered (room.Id, user)] |> Ok
+  | RoomIsWaiting (room, _) ->
+    [UserEntered (room.Id, user)] |> Ok
   | RoomOnExam (room, _) ->
     match user with
     | Host _ -> [UserEntered (room.Id, user)] |> Ok
@@ -23,7 +25,8 @@ let handleEnterRoom user = function
   | _ -> Error CannotEnterAfterExamEnded
 
 let handleExitRoom user = function
-  | RoomIsWaiting (room, _) | RoomExamFinished (room, _) -> [UserExited (room.Id, user)] |> Ok
+  | RoomIsWaiting (room, _) | RoomExamFinished (room, _) ->
+    [UserExited (room.Id, user)] |> Ok
   | RoomOnExam (room, _) ->
     match user with
     | Student s ->
@@ -42,35 +45,39 @@ let handleSubmitPaper student subm = function
   | _ -> Error CannotSubmitPaperNotWhileExamRunning
 
 let handleSendMessage msg = function
-  | RoomIsWaiting (room, _) -> [MessageSent (room.Id, msg)] |> Ok
-  | RoomOnExam (room, _) -> [MessageSent (room.Id, msg)] |> Ok
-  | RoomExamFinished (room, _) -> [MessageSent (room.Id, msg)] |> Ok
+  | RoomIsWaiting (room, _) | RoomOnExam (room, _) | RoomExamFinished (room, _) ->
+    [MessageSent (room.Id, msg)] |> Ok
   | RoomIsClosed -> Error CannotSendMessageAfterRoomClosed
 
 let handleEndExam = function
-  | RoomOnExam (room, _) -> [ExamEnded room.Id] |> Ok
+  | RoomOnExam (room, _) ->
+    [ExamEnded room.Id] |> Ok
   | _ -> Error CannotEndExam
 
 let handleCloseRoom = function
-  | RoomIsWaiting (room, _) -> [RoomClosed room.Id] |> Ok
-  | RoomExamFinished (room, _) -> [RoomClosed room.Id] |> Ok
+  | RoomIsWaiting (room, _) | RoomExamFinished (room, _) ->
+    [RoomClosed room.Id] |> Ok
   | RoomOnExam _ -> Error CannotCloseRoomDuringExam
   | RoomIsClosed -> Error NotValidRoom
 
 let handleChangeRoomTitle title = function
-  | RoomIsWaiting (room, _) -> [RoomTitleChanged (room.Id, title)] |> Ok
+  | RoomIsWaiting (room, _) ->
+    [RoomTitleChanged (room.Id, title)] |> Ok
   | _ -> Error CannotChangeRoomTitleAfterExamStarted
 
 let handleChangeUserName user name = function
-  | RoomIsWaiting (room, _) -> [UserNameChanged (room.Id, user, name)] |> Ok
+  | RoomIsWaiting (room, _) ->
+    [UserNameChanged (room.Id, user, name)] |> Ok
   | _ -> Error CannotChangeRoomTitleAfterExamStarted
 
 let handleChangeStudentId student stdId = function
-  | RoomIsWaiting (room, _) -> [StudentIdChanged (room.Id, student, stdId)] |> Ok
+  | RoomIsWaiting (room, _) ->
+    [StudentIdChanged (room.Id, student, stdId)] |> Ok
   | _ -> Error CannotChangeStudentIdAfterExamStarted
 
 let handleAddPaper paper = function
-  | RoomIsWaiting (room, _) -> [PaperAdded (room.Id, paper)] |> Ok
+  | RoomIsWaiting (room, _) ->
+    [PaperAdded (room.Id, paper)] |> Ok
   | _ -> Error CannotAddPaperAfterExamStarted
 
 let execute state = function
