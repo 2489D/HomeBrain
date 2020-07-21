@@ -20,13 +20,13 @@ type Error =
 module Error =
   let toString = function
     | ExamAlreadyStarted -> "Exam already started."
-    | StudentCannotEnterAfterExamStarted -> "Student cannot enter after exam started." // FIXME: start? starts?
+    | StudentCannotEnterAfterExamStarted -> "Student cannot enter after an exam has been started."
     | CannotEnterAfterExamEnded -> "Cannot enter room after exam ended."
-    | StudentCannotExitBeforeSubmit -> "Student cannot exit before one submits." // FIXME: Fxxking English
+    | StudentCannotExitBeforeSubmit -> "Student cannot exit before one has submitted."
     | HostCannotExitDuringExam -> "Host Cannot exit during exam."
     | AtLeastOneHostShouldRemain -> "At least one host should remain."
     | NotValidRoom -> "The room is not valid. Probably the room is closed already."
-    | CannotSubmitPaperNotWhileExamRunning -> "Cannot submit paper not while during exam." // FIXME: Fxxking English
+    | CannotSubmitPaperNotWhileExamRunning -> "Cannot submit paper during an exam."
     | CannotSendMessageAfterRoomClosed -> "Cannot send message after room closed."
     | CannotEndExam -> "Cannot end exam."
     | CannotCloseRoomDuringExam -> "Cannot close the room while during exam."
